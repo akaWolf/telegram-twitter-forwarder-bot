@@ -35,6 +35,7 @@ class FetchAndSendTweetsJob(Job):
         return max(self.MIN_INTERVAL, res)
 
     def __init__(self, context=None):
+        self.days = tuple(range(7))
         self.repeat = True
         self.context = context
         self.name = self.__class__.__name__

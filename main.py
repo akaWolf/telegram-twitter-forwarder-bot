@@ -4,7 +4,8 @@ import tweepy
 from envparse import Env
 from telegram.ext import CommandHandler
 from telegram.ext import Updater
-from telegram.ext.messagehandler import MessageHandler, Filters
+from telegram.ext.messagehandler import MessageHandler
+from telegram.ext.filters import Filters
 
 from bot import TwitterForwarderBot
 from commands import *
@@ -16,6 +17,9 @@ env = Env(
     TWITTER_ACCESS_TOKEN=str,
     TWITTER_ACCESS_TOKEN_SECRET=str,
     TELEGRAM_BOT_TOKEN=str,
+    PROXY_URL=str,
+    PROXY_USERNAME=str,
+    PROXY_PASSWORD=str,
 )
 
 
@@ -42,7 +46,17 @@ if __name__ == '__main__':
 
     # initialize telegram API
     token = env('TELEGRAM_BOT_TOKEN')
-    updater = Updater(bot=TwitterForwarderBot(token, twapi))
+    try:
+        request_kwargs = {
+            'proxy_url': env('PROXY_URL'),
+            'urllib3_proxy_kwargs': {
+                'username': env('PROXY_USERNAME'),
+                'password': env('PROXY_PASSWORD'),
+            }
+        }
+    except:
+        request_kwargs = None
+    updater = Updater(bot=TwitterForwarderBot(token, twapi, req_kwargs=request_kwargs))
     dispatcher = updater.dispatcher
 
     # set commands
@@ -60,11 +74,11 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler('verify', cmd_verify, pass_args=True))
     dispatcher.add_handler(CommandHandler('export_friends', cmd_export_friends))
     dispatcher.add_handler(CommandHandler('set_timezone', cmd_set_timezone, pass_args=True))
-    dispatcher.add_handler(MessageHandler([Filters.text], handle_chat))
+    dispatcher.add_handler(MessageHandler(Filters.text, handle_chat))
 
     # put job
     queue = updater.job_queue
-    queue.put(FetchAndSendTweetsJob(), next_t=0)
+    queue._put(FetchAndSendTweetsJob(), next_t=0)
 
     # poll
     updater.start_polling()

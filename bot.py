@@ -4,6 +4,7 @@ import telegram
 import tweepy
 from pytz import timezone, utc
 from telegram import Bot
+from telegram.utils.request import Request
 from telegram.error import TelegramError
 
 from models import TelegramChat, TwitterUser
@@ -12,8 +13,11 @@ from util import escape_markdown, prepare_tweet_text
 
 class TwitterForwarderBot(Bot):
 
-    def __init__(self, token, tweepy_api_object, update_offset=0):
-        super().__init__(token=token)
+    def __init__(self, token, tweepy_api_object, req_kwargs=None, update_offset=0):
+        request = None
+        if req_kwargs:
+            request = Request(**req_kwargs)
+        super().__init__(token=token, request=request)
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info("Initializing")
         self.update_offset = update_offset

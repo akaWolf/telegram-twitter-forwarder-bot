@@ -4,7 +4,6 @@ from datetime import datetime
 from pytz import timezone
 from pytz.exceptions import UnknownTimeZoneError
 import telegram
-from telegram.emoji import Emoji
 import tweepy
 from tweepy.auth import OAuthHandler
 from tweepy.error import TweepError
@@ -43,10 +42,9 @@ Here's the commands:
 - /set\_timezone - set your [timezone name]({}) (for example Asia/Tokyo)
 - /source - info about source code
 - /help - view help text
-This bot is being worked on, so it may break sometimes. Contact @franciscod if you want {}
+This bot is being worked on, so it may break sometimes. Contact @akaWolf if you want.
 """.format(
-            TIMEZONE_LIST_URL,
-            Emoji.SMILING_FACE_WITH_OPEN_MOUTH_AND_SMILING_EYES),
+            TIMEZONE_LIST_URL),
                   disable_web_page_preview=True,
                   parse_mode=telegram.ParseMode.MARKDOWN)
 
@@ -197,7 +195,7 @@ def cmd_wipe(bot, update, chat=None):
 def cmd_source(bot, update, chat=None):
     bot.reply(update, "This bot is Free Software under the LGPLv3. "
                     "You can get the code from here: "
-                    "https://github.com/franciscod/telegram-twitter-forwarder-bot")
+                    "https://github.com/akaWolf/telegram-twitter-forwarder-bot")
 
 
 @with_touched_chat
