@@ -95,13 +95,20 @@ class FetchAndSendTweetsJob(Job):
                 continue
 
             for tweet in tweets:
-                self.logger.debug("- Got tweet: {}".format(tweet.full_text))
+                # tweet.full_text doesn't work for retweets,
+                # see https://stackoverflow.com/a/48967803
+                if 'retweeted_status' in tweet._json:
+                    tw_text = tweet._json['retweeted_status']['full_text']
+                else:
+                    tw_text = tweet.full_text
+
+                self.logger.debug("- Got tweet: {}".format(tw_text))
 
                 # Check if tweet contains media, else check if it contains a link to an image
                 extensions = ('.jpg', '.jpeg', '.png', '.gif')
                 pattern = '[(%s)]$' % ')('.join(extensions)
                 photo_url = ''
-                tweet_text = html.unescape(tweet.full_text)
+                tweet_text = html.unescape(tw_text)
                 if 'media' in tweet.entities:
                     photo_url = tweet.entities['media'][0]['media_url_https']
                 else:
@@ -116,7 +123,7 @@ class FetchAndSendTweetsJob(Job):
                 for url_entity in tweet.entities['urls']:
                     expanded_url = url_entity['expanded_url']
                     indices = url_entity['indices']
-                    display_url = tweet.full_text[indices[0]:indices[1]]
+                    display_url = tw_text[indices[0]:indices[1]]
                     tweet_text = tweet_text.replace(display_url, expanded_url)
 
                 tw_data = {
