@@ -16,7 +16,9 @@ class TwitterForwarderBot(Bot):
     def __init__(self, token, tweepy_api_object, req_kwargs=None, update_offset=0):
         request = None
         if req_kwargs:
-            request = Request(**req_kwargs)
+            # use some pretty big value as con_pool_size
+            # see https://github.com/python-telegram-bot/python-telegram-bot/issues/787
+            request = Request(con_pool_size = 16, **req_kwargs)
         super().__init__(token=token, request=request)
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info("Initializing")
