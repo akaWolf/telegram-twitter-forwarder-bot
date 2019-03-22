@@ -9,7 +9,7 @@ import tweepy
 from telegram.error import TelegramError
 from telegram.ext import Job
 
-from models import TwitterUser, Tweet, Subscription, db, TelegramChat
+from models import TwitterUser, Tweet, Subscription, TelegramChat
 
 INFO_CLEANUP = {
 	'NOTFOUND': "Your subscription to @{} was removed because that profile doesn't exist anymore. Maybe the account's name changed?",
@@ -147,49 +147,66 @@ class FetchAndSendTweetsJob(Job):
 		TwitterUser.update(last_fetched=datetime.now()) \
 			.where(TwitterUser.id << [tw.id for tw in updated_tw_users]).execute()
 
-		if not updated_tw_users:
-			return
-
-		if tweet_rows:
+		if updated_tw_users and tweet_rows:
 			Tweet.insert_many(tweet_rows).execute()
 
-		# send the new tweets to subscribers
+		# send last tweets to newcomers
 		subscriptions = list(Subscription.select()
-							 .where(Subscription.tw_user << updated_tw_users))
+							.where(Subscription.last_tweet_id == 0))
+		for s in subscriptions:
+			self.logger.debug(
+				"Checking new subscription {} {}".format(s.tg_chat.chat_id, s.tw_user.screen_name))
+
+			try:
+				tw = s.tw_user.tweets.select() \
+					.order_by(Tweet.tw_id.desc()) \
+					.first()
+				if tw is None:
+					self.logger.warning("Something fishy is going on here...")
+				else:
+					bot.send_tweet(s.tg_chat, tw)
+					# save the latest tweet sent on this subscription
+					s.last_tweet_id = tw.tw_id
+					s.save()
+			except IndexError:
+				self.logger.debug("- No tweets available yet on {}".format(s.tw_user.screen_name))
+
+		# send the new tweets to existing subscribers
+		query = """SELECT * FROM subscription S
+		INNER JOIN twitteruser TU
+		ON S.tw_user_id = TU.id
+		WHERE S.last_tweet_id <
+		(
+			SELECT tw_id
+			FROM tweet T
+			WHERE T.twitter_user_id = TU.id
+			ORDER BY T.tw_id DESC
+			LIMIT 1
+		)
+"""
+		subscriptions = list(Subscription.raw(query))
 		for s in subscriptions:
 			# are there new tweets? send em all!
 			self.logger.debug(
 				"Checking subscription {} {}".format(s.tg_chat.chat_id, s.tw_user.screen_name))
 
-			if s.last_tweet_id == 0:  # didn't receive any tweet yet
-				try:
-					tw = s.tw_user.tweets.select() \
-						.order_by(Tweet.tw_id.desc()) \
-						.first()
-					if tw is None:
-						self.logger.warning("Something fishy is going on here...")
-					else:
-						bot.send_tweet(s.tg_chat, tw)
-						# save the latest tweet sent on this subscription
-						s.last_tweet_id = tw.tw_id
-						s.save()
-				except IndexError:
-					self.logger.debug("- No tweets available yet on {}".format(s.tw_user.screen_name))
+			self.logger.debug("- Some fresh tweets here which was not sended yet!")
 
-				continue
+			last_sended_tweet_id = s.last_tweet_id
 
-			if s.tw_user.last_tweet_id > s.last_tweet_id:
-				self.logger.debug("- Some fresh tweets here!")
-				for tw in (s.tw_user.tweets.select()
-									.where(Tweet.tw_id > s.last_tweet_id)
-									.order_by(Tweet.tw_id.asc())
-						):
-					bot.send_tweet(s.tg_chat, tw)
+			for tw in (s.tw_user.tweets.select()
+								.where(Tweet.tw_id > s.last_tweet_id)
+								.order_by(Tweet.tw_id.asc())
+					):
+				if bot.send_tweet(s.tg_chat, tw):
+					last_sended_tweet_id = tw.tw_id
+				else:
+					break
 
-				# save the latest tweet sent on this subscription
-				s.last_tweet_id = s.tw_user.last_tweet_id
-				s.save()
-				continue
+			# save the latest tweet sent on this subscription
+			s.last_tweet_id = last_sended_tweet_id
+			s.save()
+			continue
 
 			self.logger.debug("- No new tweets here.")
 

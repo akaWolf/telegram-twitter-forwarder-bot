@@ -65,6 +65,8 @@ class TwitterForwarderBot(Bot):
 				),
 				parse_mode=telegram.ParseMode.MARKDOWN)
 
+			return True
+
 		except TelegramError as e:
 			self.logger.info("Couldn't send tweet {} to chat {}: {}".format(
 				tweet.tw_id, chat.chat_id, e.message
@@ -82,6 +84,8 @@ class TwitterForwarderBot(Bot):
 				self.logger.info("Marking chat for deletion")
 				chat.delete_soon = True
 				chat.save()
+
+			return False
 
 	def get_chat(self, tg_chat):
 		db_chat, _created = TelegramChat.get_or_create(
