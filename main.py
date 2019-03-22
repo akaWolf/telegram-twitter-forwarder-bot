@@ -6,6 +6,7 @@ from telegram.ext import CommandHandler
 from telegram.ext import Updater
 from telegram.ext.messagehandler import MessageHandler
 from telegram.ext.filters import Filters
+from telegram.error import (TelegramError, Unauthorized, BadRequest, TimedOut, ChatMigrated, NetworkError)
 
 from bot import TwitterForwarderBot
 from commands import *
@@ -21,6 +22,23 @@ env = Env(
 	PROXY_USERNAME=str,
 	PROXY_PASSWORD=str,
 )
+
+def error_callback(bot, update, error):
+	logger = logging.getLogger('ErrorCallback')
+	try:
+		raise error
+	except Unauthorized:
+		logger.warning("Unauthorized")
+	except BadRequest:
+		logger.warning("BadRequest")
+	except TimedOut:
+		logger.warning("TimedOut")
+	except NetworkError:
+		logger.warning("NetworkError")
+	except ChatMigrated as e:
+		logger.warning("ChatMigrated")
+	except TelegramError:
+		logger.warning("TelegramError")
 
 
 if __name__ == '__main__':
@@ -75,6 +93,8 @@ if __name__ == '__main__':
 	dispatcher.add_handler(CommandHandler('export_friends', cmd_export_friends))
 	dispatcher.add_handler(CommandHandler('set_timezone', cmd_set_timezone, pass_args=True))
 	dispatcher.add_handler(MessageHandler(Filters.text, handle_chat))
+
+	dispatcher.add_error_handler(error_callback)
 
 	# put job
 	queue = updater.job_queue
