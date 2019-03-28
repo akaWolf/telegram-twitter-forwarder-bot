@@ -95,12 +95,19 @@ class FetchAndSendTweetsJob(Job):
 				continue
 
 			for tweet in tweets:
+				retweet = False
+				if 'retweeted_status' in tweet._json:
+					retweet = True
+
 				# tweet.full_text doesn't work for retweets,
 				# see https://stackoverflow.com/a/48967803
-				if 'retweeted_status' in tweet._json:
-					tw_text = tweet._json['retweeted_status']['full_text']
-				else:
-					tw_text = tweet.full_text
+				if retweet:
+					# save our tweet
+					tweet_our = tweet
+					# use original tweet to text processing
+					tweet = tweet.retweeted_status
+
+				tw_text = tweet.full_text
 
 				self.logger.debug('- Got tweet: {}'.format(tw_text))
 
@@ -125,6 +132,11 @@ class FetchAndSendTweetsJob(Job):
 					indices = url_entity['indices']
 					display_url = tw_text[indices[0]:indices[1]]
 					tweet_text = tweet_text.replace(display_url, expanded_url)
+
+				# restore our tweet to send actual info about our tweet
+				# TODO: save info about retweet status and show it to user
+				if retweet:
+					tweet = tweet_our
 
 				tw_data = {
 					'tw_id': tweet.id,
