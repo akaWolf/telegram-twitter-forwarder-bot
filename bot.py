@@ -74,6 +74,9 @@ class TwitterForwarderBot(Bot):
 
 			delet_this = None
 
+			if e.message == 'Forbidden: bot was blocked by the user':
+				delet_this = True
+
 			if e.message == 'Bad Request: group chat was migrated to a supergroup chat':
 				delet_this = True
 
