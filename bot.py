@@ -21,7 +21,7 @@ class TwitterForwarderBot(Bot):
 			request = Request(con_pool_size = 16, **req_kwargs)
 		super().__init__(token=token, request=request)
 		self.logger = logging.getLogger(self.__class__.__name__)
-		self.logger.info("Initializing")
+		self.logger.info('Initializing')
 		self.update_offset = update_offset
 		self.tw = tweepy_api_object
 
@@ -30,7 +30,7 @@ class TwitterForwarderBot(Bot):
 
 	def send_tweet(self, chat, tweet):
 		try:
-			self.logger.debug("Sending tweet {} to chat {}...".format(
+			self.logger.debug('Sending tweet {} to chat {}...'.format(
 				tweet.tw_id, chat.chat_id
 			))
 
@@ -50,11 +50,11 @@ class TwitterForwarderBot(Bot):
 			self.sendMessage(
 				chat_id=chat.chat_id,
 				disable_web_page_preview=not photo_url,
-				text="""
+				text='''
 {link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name})) at {created_at}:
 {text}
 -- [Link to this Tweet](https://twitter.com/{screen_name}/status/{tw_id})
-"""
+'''
 					.format(
 					link_preview=photo_url,
 					text=prepare_tweet_text(tweet.text),
@@ -68,7 +68,7 @@ class TwitterForwarderBot(Bot):
 			return True
 
 		except TelegramError as e:
-			self.logger.info("Couldn't send tweet {} to chat {}: {}".format(
+			self.logger.info('Couldn\'t send tweet {} to chat {}: {}'.format(
 				tweet.tw_id, chat.chat_id, e.message
 			))
 
@@ -77,11 +77,11 @@ class TwitterForwarderBot(Bot):
 			if e.message == 'Bad Request: group chat was migrated to a supergroup chat':
 				delet_this = True
 
-			if e.message == "Unauthorized":
+			if e.message == 'Unauthorized':
 				delet_this = True
 
 			if delet_this:
-				self.logger.info("Marking chat for deletion")
+				self.logger.info('Marking chat for deletion')
 				chat.delete_soon = True
 				chat.save()
 

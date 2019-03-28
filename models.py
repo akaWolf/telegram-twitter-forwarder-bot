@@ -15,7 +15,7 @@ class TwitterUser(Model):
 
 	@property
 	def full_name(self):
-		return "{} ({})".format(self.name, self.screen_name)
+		return '{} ({})'.format(self.name, self.screen_name)
 
 	@property
 	def last_tweet_id(self):
@@ -55,8 +55,8 @@ class TelegramChat(Model):
 
 
 class Subscription(Model):
-	tg_chat = ForeignKeyField(TelegramChat, related_name="subscriptions")
-	tw_user = ForeignKeyField(TwitterUser, related_name="subscriptions")
+	tg_chat = ForeignKeyField(TelegramChat, related_name='subscriptions')
+	tw_user = ForeignKeyField(TwitterUser, related_name='subscriptions')
 	known_at = DateTimeField(default=datetime.datetime.now)
 	last_tweet_id = BigIntegerField(default=0)
 

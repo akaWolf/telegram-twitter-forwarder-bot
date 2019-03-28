@@ -12,8 +12,8 @@ from telegram.ext import Job
 from models import TwitterUser, Tweet, Subscription, TelegramChat
 
 INFO_CLEANUP = {
-	'NOTFOUND': "Your subscription to @{} was removed because that profile doesn't exist anymore. Maybe the account's name changed?",
-	'PROTECTED': "Your subscription to @{} was removed because that profile is protected and can't be fetched.",
+	'NOTFOUND': 'Your subscription to @{} was removed because that profile doesn\'t exist anymore. Maybe the account\'s name changed?',
+	'PROTECTED': 'Your subscription to @{} was removed because that profile is protected and can\'t be fetched.',
 }
 
 class FetchAndSendTweetsJob(Job):
@@ -45,7 +45,7 @@ class FetchAndSendTweetsJob(Job):
 		self.logger = logging.getLogger(self.name)
 
 	def run(self, bot):
-		self.logger.debug("Fetching tweets...")
+		self.logger.debug('Fetching tweets...')
 		tweet_rows = []
 		# fetch the tw users' tweets
 		tw_users = list((TwitterUser.select()
@@ -60,7 +60,7 @@ class FetchAndSendTweetsJob(Job):
 				if tw_user.last_tweet_id == 0:
 					# get just the latest tweet
 					self.logger.debug(
-						"Fetching latest tweet by {}".format(tw_user.screen_name))
+						'Fetching latest tweet by {}'.format(tw_user.screen_name))
 					tweets = bot.tw.user_timeline(
 						screen_name=tw_user.screen_name,
 						count=1,
@@ -68,7 +68,7 @@ class FetchAndSendTweetsJob(Job):
 				else:
 					# get the fresh tweets
 					self.logger.debug(
-						"Fetching new tweets from {}".format(tw_user.screen_name))
+						'Fetching new tweets from {}'.format(tw_user.screen_name))
 					tweets = bot.tw.user_timeline(
 						screen_name=tw_user.screen_name,
 						since_id=tw_user.last_tweet_id,
@@ -77,21 +77,21 @@ class FetchAndSendTweetsJob(Job):
 			except tweepy.error.TweepError as e:
 				sc = e.response.status_code
 				if sc == 429:
-					self.logger.debug("- Hit ratelimit, breaking.")
+					self.logger.debug('- Hit ratelimit, breaking.')
 					break
 
 				if sc == 401:
 					users_to_cleanup.append((tw_user, 'PROTECTED'))
-					self.logger.debug("- Protected tweets here. Cleaning up this user")
+					self.logger.debug('- Protected tweets here. Cleaning up this user')
 					continue
 
 				if sc == 404:
 					users_to_cleanup.append((tw_user, 'NOTFOUND'))
-					self.logger.debug("- 404? Maybe screen name changed? Cleaning up this user")
+					self.logger.debug('- 404? Maybe screen name changed? Cleaning up this user')
 					continue
 
 				self.logger.debug(
-					"- Unknown exception, Status code {}".format(sc))
+					'- Unknown exception, Status code {}'.format(sc))
 				continue
 
 			for tweet in tweets:
@@ -102,7 +102,7 @@ class FetchAndSendTweetsJob(Job):
 				else:
 					tw_text = tweet.full_text
 
-				self.logger.debug("- Got tweet: {}".format(tw_text))
+				self.logger.debug('- Got tweet: {}'.format(tw_text))
 
 				# Check if tweet contains media, else check if it contains a link to an image
 				extensions = ('.jpg', '.jpeg', '.png', '.gif')
@@ -118,7 +118,7 @@ class FetchAndSendTweetsJob(Job):
 							photo_url = expanded_url
 							break
 				if photo_url:
-					self.logger.debug("- - Found media URL in tweet: " + photo_url)
+					self.logger.debug('- - Found media URL in tweet: ' + photo_url)
 
 				for url_entity in tweet.entities['urls']:
 					expanded_url = url_entity['expanded_url']
@@ -135,7 +135,7 @@ class FetchAndSendTweetsJob(Job):
 				}
 				try:
 					t = Tweet.get(Tweet.tw_id == tweet.id)
-					self.logger.warning("Got duplicated tw_id on this tweet:")
+					self.logger.warning('Got duplicated tw_id on this tweet:')
 					self.logger.warning(str(tw_data))
 				except Tweet.DoesNotExist:
 					tweet_rows.append(tw_data)
@@ -155,24 +155,24 @@ class FetchAndSendTweetsJob(Job):
 							.where(Subscription.last_tweet_id == 0))
 		for s in subscriptions:
 			self.logger.debug(
-				"Checking new subscription {} {}".format(s.tg_chat.chat_id, s.tw_user.screen_name))
+				'Checking new subscription {} {}'.format(s.tg_chat.chat_id, s.tw_user.screen_name))
 
 			try:
 				tw = s.tw_user.tweets.select() \
 					.order_by(Tweet.tw_id.desc()) \
 					.first()
 				if tw is None:
-					self.logger.warning("Something fishy is going on here...")
+					self.logger.warning('Something fishy is going on here...')
 				else:
 					bot.send_tweet(s.tg_chat, tw)
 					# save the latest tweet sent on this subscription
 					s.last_tweet_id = tw.tw_id
 					s.save()
 			except IndexError:
-				self.logger.debug("- No tweets available yet on {}".format(s.tw_user.screen_name))
+				self.logger.debug('- No tweets available yet on {}'.format(s.tw_user.screen_name))
 
 		# send the new tweets to existing subscribers
-		query = """SELECT * FROM subscription S
+		query = '''SELECT * FROM subscription S
 		INNER JOIN twitteruser TU
 		ON S.tw_user_id = TU.id
 		WHERE S.last_tweet_id <
@@ -183,14 +183,14 @@ class FetchAndSendTweetsJob(Job):
 			ORDER BY T.tw_id DESC
 			LIMIT 1
 		)
-"""
+'''
 		subscriptions = list(Subscription.raw(query))
 		for s in subscriptions:
 			# are there new tweets? send em all!
 			self.logger.debug(
-				"Checking subscription {} {}".format(s.tg_chat.chat_id, s.tw_user.screen_name))
+				'Checking subscription {} {}'.format(s.tg_chat.chat_id, s.tw_user.screen_name))
 
-			self.logger.debug("- Some fresh tweets here which was not sended yet!")
+			self.logger.debug('- Some fresh tweets here which was not sended yet!')
 
 			last_sended_tweet_id = s.last_tweet_id
 
@@ -208,30 +208,30 @@ class FetchAndSendTweetsJob(Job):
 			s.save()
 			continue
 
-			self.logger.debug("- No new tweets here.")
+			self.logger.debug('- No new tweets here.')
 
 
-		self.logger.debug("Starting tw_user cleanup")
+		self.logger.debug('Starting tw_user cleanup')
 		if not users_to_cleanup:
-			self.logger.debug("- Nothing to cleanup")
+			self.logger.debug('- Nothing to cleanup')
 		else:
 			for tw_user, reason in users_to_cleanup:
-				self.logger.debug("- Cleaning up subs on user @{}, {}".format(tw_user.screen_name, reason))
+				self.logger.debug('- Cleaning up subs on user @{}, {}'.format(tw_user.screen_name, reason))
 				message = INFO_CLEANUP[reason].format(tw_user.screen_name)
 				subs = list(tw_user.subscriptions)
 				for s in subs:
 					chat = s.tg_chat
 					if chat.delete_soon:
-						self.logger.debug ("- - skipping because of delete_soon chatid={}".format(chat_id))
+						self.logger.debug ('- - skipping because of delete_soon chatid={}'.format(chat_id))
 						continue
 					chat_id = chat.chat_id
-					self.logger.debug ("- - bye on chatid={}".format(chat_id))
+					self.logger.debug ('- - bye on chatid={}'.format(chat_id))
 					s.delete_instance()
 
 					try:
 						bot.sendMessage(chat_id=chat_id, text=message)
 					except TelegramError as e:
-						self.logger.info("Couldn't send unsubscription notice of {} to chat {}: {}".format(
+						self.logger.info('Couldn\'t send unsubscription notice of {} to chat {}: {}'.format(
 							tw_user.screen_name, chat_id, e.message
 						))
 
@@ -240,20 +240,20 @@ class FetchAndSendTweetsJob(Job):
 						if e.message == 'Bad Request: group chat was migrated to a supergroup chat':
 							delet_this = True
 
-						if e.message == "Unauthorized":
+						if e.message == 'Unauthorized':
 							delet_this = True
 
 						if delet_this:
-							self.logger.info("Marking chat for deletion")
+							self.logger.info('Marking chat for deletion')
 							chat.delete_soon = True
 							chat.save()
 
-			self.logger.debug("- Cleaning up TwitterUser @{}".format(tw_user.screen_name, reason))
+			self.logger.debug('- Cleaning up TwitterUser @{}'.format(tw_user.screen_name, reason))
 			tw_user.delete_instance()
 
-			self.logger.debug ("- Cleanup finished")
+			self.logger.debug ('- Cleanup finished')
 
-		self.logger.debug("Cleaning up TelegramChats marked for deletion")
+		self.logger.debug('Cleaning up TelegramChats marked for deletion')
 		for chat in TelegramChat.select().where(TelegramChat.delete_soon == True):
 			chat.delete_instance(recursive=True)
-			self.logger.debug("Deleting chat {}".format(chat.chat_id))
+			self.logger.debug('Deleting chat {}'.format(chat.chat_id))

@@ -28,17 +28,17 @@ def error_callback(bot, update, error):
 	try:
 		raise error
 	except Unauthorized:
-		logger.warning("Unauthorized")
+		logger.warning('Unauthorized')
 	except BadRequest:
-		logger.warning("BadRequest")
+		logger.warning('BadRequest')
 	except TimedOut:
-		logger.warning("TimedOut")
+		logger.warning('TimedOut')
 	except NetworkError:
-		logger.warning("NetworkError")
+		logger.warning('NetworkError')
 	except ChatMigrated as e:
-		logger.warning("ChatMigrated")
+		logger.warning('ChatMigrated')
 	except TelegramError:
-		logger.warning("TelegramError")
+		logger.warning('TelegramError')
 
 
 if __name__ == '__main__':
@@ -56,9 +56,9 @@ if __name__ == '__main__':
 	try:
 		auth.set_access_token(env('TWITTER_ACCESS_TOKEN'), env('TWITTER_ACCESS_TOKEN_SECRET'))
 	except KeyError:
-		print("Either TWITTER_ACCESS_TOKEN or TWITTER_ACCESS_TOKEN_SECRET "
-				"environment variables are missing. "
-				"Tweepy will be initialized in 'app-only' mode")
+		print('Either TWITTER_ACCESS_TOKEN or TWITTER_ACCESS_TOKEN_SECRET '
+				'environment variables are missing. '
+				'Tweepy will be initialized in \'app-only\' mode')
 
 	twapi = tweepy.API(auth)
 

@@ -11,7 +11,7 @@ from tweepy.error import TweepError
 from models import Subscription
 from util import with_touched_chat, escape_markdown, markdown_twitter_usernames
 
-TIMEZONE_LIST_URL = "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+TIMEZONE_LIST_URL = 'https://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
 
 def cmd_ping(bot, update):
 	bot.reply(update, 'Pong!')
@@ -21,13 +21,13 @@ def cmd_ping(bot, update):
 def cmd_start(bot, update, chat=None):
 	bot.reply(
 		update,
-		"Hello! This bot lets you subscribe to twitter accounts and receive their tweets here! "
-		"Check out /help for more info.")
+		'Hello! This bot lets you subscribe to twitter accounts and receive their tweets here! '
+		'Check out /help for more info.')
 
 
 @with_touched_chat
 def cmd_help(bot, update, chat=None):
-		bot.reply(update, """
+		bot.reply(update, '''
 Hello! This bot forwards you updates from twitter streams!
 Here's the commands:
 - /sub - subscribes to updates from users
@@ -43,7 +43,7 @@ Here's the commands:
 - /source - info about source code
 - /help - view help text
 This bot is being worked on, so it may break sometimes. Contact @akaWolf if you want.
-""".format(TIMEZONE_LIST_URL),
+'''.format(TIMEZONE_LIST_URL),
 			disable_web_page_preview=True,
 			parse_mode=telegram.ParseMode.MARKDOWN)
 
@@ -51,7 +51,7 @@ This bot is being worked on, so it may break sometimes. Contact @akaWolf if you 
 @with_touched_chat
 def cmd_sub(bot, update, args, chat=None):
 	if len(args) < 1:
-		bot.reply(update, "Use /sub username1 username2 username3 ...")
+		bot.reply(update, 'Use /sub username1 username2 username3 ...')
 		return
 	tw_usernames = args
 	not_found = []
@@ -74,22 +74,22 @@ def cmd_sub(bot, update, args, chat=None):
 		Subscription.create(tg_chat=chat, tw_user=tw_user)
 		successfully_subscribed.append(tw_user.full_name)
 
-	reply = ""
+	reply = ''
 
 	if len(not_found) is not 0:
-		reply += "Sorry, I didn't find username{} {}\n\n".format(
-					 "" if len(not_found) is 1 else "s",
-					 ", ".join(not_found)
+		reply += 'Sorry, I didn\'t find username{} {}\n\n'.format(
+					 '' if len(not_found) is 1 else 's',
+					 ', '.join(not_found)
 				 )
 
 	if len(already_subscribed) is not 0:
-		reply += "You're already subscribed to {}\n\n".format(
-					 ", ".join(already_subscribed)
+		reply += 'You\'re already subscribed to {}\n\n'.format(
+					 ', '.join(already_subscribed)
 				 )
 
 	if len(successfully_subscribed) is not 0:
-		reply += "I've added your subscription to {}".format(
-					 ", ".join(successfully_subscribed)
+		reply += 'I\'ve added your subscription to {}'.format(
+					 ', '.join(successfully_subscribed)
 				 )
 
 	bot.reply(update, reply)
@@ -98,7 +98,7 @@ def cmd_sub(bot, update, args, chat=None):
 @with_touched_chat
 def cmd_unsub(bot, update, args, chat=None):
 	if len(args) < 1:
-		bot.reply(update, "Use /unsub username1 username2 username3 ...")
+		bot.reply(update, 'Use /unsub username1 username2 username3 ...')
 		return
 	tw_usernames = args
 	not_found = []
@@ -119,16 +119,16 @@ def cmd_unsub(bot, update, args, chat=None):
 
 		successfully_unsubscribed.append(tw_user.full_name)
 
-	reply = ""
+	reply = ''
 
 	if len(not_found) is not 0:
-		reply += "I didn't find any subscription to {}\n\n".format(
-					 ", ".join(not_found)
+		reply += 'I didn\'t find any subscription to {}\n\n'.format(
+					 ', '.join(not_found)
 				)
 
 	if len(successfully_unsubscribed) is not 0:
-		reply += "You are no longer subscribed to {}".format(
-					", ".join(successfully_unsubscribed)
+		reply += 'You are no longer subscribed to {}'.format(
+					', '.join(successfully_unsubscribed)
 		)
 
 	bot.reply(update, reply)
@@ -146,12 +146,12 @@ def cmd_list(bot, update, chat=None):
 	for sub in subscriptions:
 		subs.append(sub.tw_user.full_name)
 
-	subject = "This group is" if chat.is_group else "You are"
+	subject = 'This group is' if chat.is_group else 'You are'
 
 	bot.reply(
 		update,
-		subject + " subscribed to the following Twitter users:\n" +
-		"\n - ".join(subs) + "\n\nYou can remove any of them using /unsub username")
+		subject + ' subscribed to the following Twitter users:\n' +
+		'\n - '.join(subs) + '\n\nYou can remove any of them using /unsub username')
 
 
 @with_touched_chat
@@ -166,11 +166,11 @@ def cmd_export(bot, update, chat=None):
 	for sub in subscriptions:
 		subs.append(sub.tw_user.screen_name)
 
-	subject = "Use this to subscribe to all subscribed Twitter users in another chat:\n\n"
+	subject = 'Use this to subscribe to all subscribed Twitter users in another chat:\n\n'
 
 	bot.reply(
 		update,
-		subject + "/sub " + " ".join(subs))
+		subject + '/sub ' + ' '.join(subs))
 
 
 @with_touched_chat
@@ -178,23 +178,23 @@ def cmd_wipe(bot, update, chat=None):
 	subscriptions = list(Subscription.select().where(
 						 Subscription.tg_chat == chat))
 
-	subs = "You had no subscriptions."
+	subs = 'You had no subscriptions.'
 	if subscriptions:
 		subs = ''.join([
-			"For the record, you were subscribed to these users: ",
+			'For the record, you were subscribed to these users: ',
 			', '.join((s.tw_user.screen_name for s in subscriptions)),
 			'.'])
 
-	bot.reply(update, "Okay, I'm forgetting about this chat. " + subs +
-					" Come back to me anytime you want. Goodbye!")
+	bot.reply(update, 'Okay, I\'m forgetting about this chat. ' + subs +
+					' Come back to me anytime you want. Goodbye!')
 	chat.delete_instance(recursive=True)
 
 
 @with_touched_chat
 def cmd_source(bot, update, chat=None):
-	bot.reply(update, "This bot is Free Software under the LGPLv3. "
-					"You can get the code from here: "
-					"https://github.com/akaWolf/telegram-twitter-forwarder-bot")
+	bot.reply(update, 'This bot is Free Software under the LGPLv3. '
+					'You can get the code from here: '
+					'https://github.com/akaWolf/telegram-twitter-forwarder-bot')
 
 
 @with_touched_chat
@@ -205,16 +205,16 @@ def cmd_all(bot, update, chat=None):
 	if len(subscriptions) == 0:
 		return bot.reply(update, 'You have no subscriptions, so no tweets to show!')
 
-	text = ""
+	text = ''
 
 	for sub in subscriptions:
 		if sub.last_tweet is None:
-			text += "\n{screen_name}: <no tweets yet>".format(
+			text += '\n{screen_name}: <no tweets yet>'.format(
 				screen_name=escape_markdown(sub.tw_user.screen_name),
 			)
 		else:
-			text += ("\n{screen_name}:\n{text} "
-					 "[link](https://twitter.com/{screen_name}/status/{tw_id})").format(
+			text += ('\n{screen_name}:\n{text} '
+					 '[link](https://twitter.com/{screen_name}/status/{tw_id})').format(
 				text=markdown_twitter_usernames(escape_markdown(sub.last_tweet.text)),
 				tw_id=sub.last_tweet.tw_id,
 				screen_name=escape_markdown(sub.tw_user.screen_name),
@@ -231,7 +231,7 @@ def cmd_get_auth_url(bot, update, chat):
 	auth_url = auth.get_authorization_url()
 	chat.twitter_request_token = json.dumps(auth.request_token)
 	chat.save()
-	msg = "go to [this url]({}) and send me your verifier code using /verify code"
+	msg = 'go to [this url]({}) and send me your verifier code using /verify code'
 	bot.reply(update, msg.format(auth_url),
 				parse_mode=telegram.ParseMode.MARKDOWN)
 
@@ -239,10 +239,10 @@ def cmd_get_auth_url(bot, update, chat):
 @with_touched_chat
 def cmd_verify(bot, update, args, chat):
 	if not chat.twitter_request_token:
-		bot.reply(update, "Use /auth command first")
+		bot.reply(update, 'Use /auth command first')
 		return
 	if len(args) < 1:
-		bot.reply(update, "No verifier code specified")
+		bot.reply(update, 'No verifier code specified')
 		return
 	verifier_code = args[0]
 	auth = OAuthHandler(bot.tw.auth.consumer_key, bot.tw.auth.consumer_secret)
@@ -250,15 +250,15 @@ def cmd_verify(bot, update, args, chat):
 	try:
 		auth.get_access_token(verifier_code)
 	except TweepError:
-		bot.reply(update, "Invalid verifier code. Use /auth again")
+		bot.reply(update, 'Invalid verifier code. Use /auth again')
 		return
 	chat.twitter_token = auth.access_token
 	chat.twitter_secret = auth.access_token_secret
 	chat.save()
-	bot.reply(update, "Access token setup complete")
+	bot.reply(update, 'Access token setup complete')
 	api = tweepy.API(auth)
 	settings = api.get_settings()
-	tz_name = settings.get("time_zone", {}).get("tzinfo_name")
+	tz_name = settings.get('time_zone', {}).get('tzinfo_name')
 	cmd_set_timezone(bot, update, [tz_name])
 
 
@@ -266,22 +266,22 @@ def cmd_verify(bot, update, args, chat):
 def cmd_export_friends(bot, update, chat):
 	if not chat.is_authorized:
 		if not chat.twitter_request_token:
-			bot.reply(update, "You have not authorized yet. Use /auth to do it")
+			bot.reply(update, 'You have not authorized yet. Use /auth to do it')
 		else:
-			bot.reply(update, "You have not verified your authorization yet. Use /verify code to do it")
+			bot.reply(update, 'You have not verified your authorization yet. Use /verify code to do it')
 		return
 	bot_auth = bot.tw.auth
 	api = chat.tw_api(bot_auth.consumer_key, bot_auth.consumer_secret)
 	screen_names = [f.screen_name for f in tweepy.Cursor(api.friends).items()]
-	bot.reply(update, "Use this to subscribe to all your Twitter friends:")
-	bot.reply(update, "/sub {}".format(" ".join(screen_names)))
+	bot.reply(update, 'Use this to subscribe to all your Twitter friends:')
+	bot.reply(update, '/sub {}'.format(' '.join(screen_names)))
 
 
 @with_touched_chat
 def cmd_set_timezone(bot, update, args, chat):
 	if len(args) < 1:
 		bot.reply(update,
-			"No timezone specified. Find yours [here]({})!".format(TIMEZONE_LIST_URL),
+			'No timezone specified. Find yours [here]({})!'.format(TIMEZONE_LIST_URL),
 			parse_mode=telegram.ParseMode.MARKDOWN)
 		return
 
@@ -292,13 +292,13 @@ def cmd_set_timezone(bot, update, args, chat):
 		chat.timezone_name = tz_name
 		chat.save()
 		tz_str = datetime.now(tz).strftime('%Z %z')
-		bot.reply(update, "Timezone is set to {}".format(tz_str))
+		bot.reply(update, 'Timezone is set to {}'.format(tz_str))
 	except UnknownTimeZoneError:
 		bot.reply(update,
-			"Unknown timezone. Find yours [here]({})!".format(TIMEZONE_LIST_URL),
+			'Unknown timezone. Find yours [here]({})!'.format(TIMEZONE_LIST_URL),
 			parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 @with_touched_chat
 def handle_chat(bot, update, chat=None):
-	bot.reply(update, "Hey! Use commands to talk with me, please! See /help")
+	bot.reply(update, 'Hey! Use commands to talk with me, please! See /help')
