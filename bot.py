@@ -56,7 +56,7 @@ class TwitterForwarderBot(Bot):
 				text='''
 {link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name})) {retweet_text}at {created_at}:
 {text}
--- [Link to this Tweet](https://twitter.com/{screen_name}/status/{tw_id})
+— [Link to this Tweet](https://twitter.com/{screen_name}/status/{tw_id})
 '''
 					.format(
 					link_preview=photo_url,
