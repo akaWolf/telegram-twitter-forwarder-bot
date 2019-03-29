@@ -75,6 +75,7 @@ class Tweet(Model):
 	created_at = DateTimeField()
 	twitter_user = ForeignKeyField(TwitterUser, related_name='tweets')
 	photo_url = TextField(default='')
+	original_name = TextField(default='')
 
 	@property
 	def screen_name(self):

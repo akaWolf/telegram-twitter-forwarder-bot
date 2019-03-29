@@ -101,13 +101,14 @@ class FetchAndSendTweetsJob(Job):
 
 				# tweet.full_text doesn't work for retweets,
 				# see https://stackoverflow.com/a/48967803
-				if retweet:
-					# save our tweet
-					tweet_our = tweet
-					# use original tweet to text processing
-					tweet = tweet.retweeted_status
 
-				tw_text = tweet.full_text
+				# use current tweet by default
+				tweet_data = tweet
+				if retweet:
+					# use original tweet to text processing
+					tweet_data = tweet.retweeted_status
+
+				tw_text = tweet_data.full_text
 
 				self.logger.debug('- Got tweet: {}'.format(tw_text))
 
@@ -116,10 +117,10 @@ class FetchAndSendTweetsJob(Job):
 				pattern = '[(%s)]$' % ')('.join(extensions)
 				photo_url = ''
 				tweet_text = html.unescape(tw_text)
-				if 'media' in tweet.entities:
-					photo_url = tweet.entities['media'][0]['media_url_https']
+				if 'media' in tweet_data.entities:
+					photo_url = tweet_data.entities['media'][0]['media_url_https']
 				else:
-					for url_entity in tweet.entities['urls']:
+					for url_entity in tweet_data.entities['urls']:
 						expanded_url = url_entity['expanded_url']
 						if re.search(pattern, expanded_url):
 							photo_url = expanded_url
@@ -127,16 +128,11 @@ class FetchAndSendTweetsJob(Job):
 				if photo_url:
 					self.logger.debug('- - Found media URL in tweet: ' + photo_url)
 
-				for url_entity in tweet.entities['urls']:
+				for url_entity in tweet_data.entities['urls']:
 					expanded_url = url_entity['expanded_url']
 					indices = url_entity['indices']
 					display_url = tw_text[indices[0]:indices[1]]
 					tweet_text = tweet_text.replace(display_url, expanded_url)
-
-				# restore our tweet to send actual info about our tweet
-				# TODO: save info about retweet status and show it to user
-				if retweet:
-					tweet = tweet_our
 
 				tw_data = {
 					'tw_id': tweet.id,
@@ -145,6 +141,11 @@ class FetchAndSendTweetsJob(Job):
 					'twitter_user': tw_user,
 					'photo_url': photo_url,
 				}
+
+				if retweet:
+					# store original screen name
+					tw_data['original_name'] = tweet_data.user.screen_name
+
 				try:
 					t = Tweet.get(Tweet.tw_id == tweet.id)
 					self.logger.warning('Got duplicated tw_id on this tweet:')

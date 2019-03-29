@@ -47,11 +47,14 @@ class TwitterForwarderBot(Bot):
 				tz = timezone(chat.timezone_name)
 				created_dt = created_dt.astimezone(tz)
 			created_at = created_dt.strftime('%Y-%m-%d %H:%M:%S %Z')
+			retweet_text = ''
+			if tweet.original_name:
+				retweet_text = 'retweeted from *{}* '.format(escape_markdown(tweet.original_name))
 			self.sendMessage(
 				chat_id=chat.chat_id,
 				disable_web_page_preview=not photo_url,
 				text='''
-{link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name})) at {created_at}:
+{link_preview}*{name}* ([@{screen_name}](https://twitter.com/{screen_name})) {retweet_text}at {created_at}:
 {text}
 -- [Link to this Tweet](https://twitter.com/{screen_name}/status/{tw_id})
 '''
@@ -62,6 +65,7 @@ class TwitterForwarderBot(Bot):
 					screen_name=tweet.screen_name,
 					created_at=created_at,
 					tw_id=tweet.tw_id,
+					retweet_text=retweet_text,
 				),
 				parse_mode=telegram.ParseMode.MARKDOWN)
 
