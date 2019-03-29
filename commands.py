@@ -170,7 +170,7 @@ def cmd_export(bot, update, chat=None):
 
 	bot.reply(
 		update,
-		subject + '/sub ' + ' '.join(subs))
+		subject + '/sub' + ' '.join(subs))
 
 
 @with_touched_chat
