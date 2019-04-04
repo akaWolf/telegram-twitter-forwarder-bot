@@ -49,7 +49,7 @@ class TwitterForwarderBot(Bot):
 			created_at = created_dt.strftime('%Y-%m-%d %H:%M:%S %Z')
 			retweet_text = ''
 			if tweet.original_name:
-				retweet_text = 'retweeted from *{}* '.format(escape_markdown(tweet.original_name))
+				retweet_text = 'retweeted from *{}* '.format(tweet.original_name)
 			self.sendMessage(
 				chat_id=chat.chat_id,
 				disable_web_page_preview=not photo_url,
