@@ -4,6 +4,7 @@ import math
 import re
 from datetime import datetime
 from threading import Event
+from urllib.parse import urlparse
 
 import tweepy
 from telegram.error import TelegramError
@@ -99,7 +100,7 @@ class FetchAndSendTweetsJob(Job):
 				if 'retweeted_status' in tweet._json:
 					retweet = True
 
-				# tweet.full_text doesn't work for retweets,
+				# NOTE: tweet.full_text doesn't work for retweets,
 				# see https://stackoverflow.com/a/48967803
 
 				# use current tweet by default
@@ -130,9 +131,24 @@ class FetchAndSendTweetsJob(Job):
 
 				for url_entity in tweet_data.entities['urls']:
 					expanded_url = url_entity['expanded_url']
+					parsed_url = urlparse(expanded_url)
+
 					indices = url_entity['indices']
 					display_url = tw_text[indices[0]:indices[1]]
-					tweet_text = tweet_text.replace(display_url, expanded_url)
+
+					replace_text = expanded_url
+
+					if parsed_url.netloc == 'twitter.com':
+						re_pattern = '/(?P<username>.+)/status/(?P<twit_id>[0-9]+)'
+						re_result = re.match(re_pattern, parsed_url.path)
+						if re_result != None:
+							commented_tweet = bot.tw.get_status(re_result.group('twit_id'), tweet_mode='extended')
+							# TODO: implement hack for retweets
+							# TODO: move text formatting into send_tweet, store only basic tweet bits
+							tweet_text = 'comment:\n' + tweet_text
+							replace_text = '\n\noriginal tweet:\n«{}»'.format(commented_tweet.full_text)
+
+					tweet_text = tweet_text.replace(display_url, replace_text)
 
 				tw_data = {
 					'tw_id': tweet.id,
