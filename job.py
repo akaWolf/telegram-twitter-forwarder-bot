@@ -142,11 +142,15 @@ class FetchAndSendTweetsJob(Job):
 						re_pattern = '/(?P<username>.+)/status/(?P<twit_id>[0-9]+)'
 						re_result = re.match(re_pattern, parsed_url.path)
 						if re_result != None:
-							commented_tweet = bot.tw.get_status(re_result.group('twit_id'), tweet_mode='extended')
-							# TODO: implement hack for retweets
-							# TODO: move text formatting into send_tweet, store only basic tweet bits
-							tweet_text = 'comment:\n' + tweet_text
-							replace_text = '\n\noriginal tweet:\n«{}»'.format(commented_tweet.full_text)
+							try:
+								commented_tweet = bot.tw.get_status(re_result.group('twit_id'), tweet_mode='extended')
+							except:
+								pass
+							else:
+								# TODO: implement hack for retweets
+								# TODO: move text formatting into send_tweet, store only basic tweet bits
+								tweet_text = 'comment:\n' + tweet_text
+								replace_text = '\n\noriginal tweet:\n«{}»'.format(commented_tweet.full_text)
 
 					tweet_text = tweet_text.replace(display_url, replace_text)
 
