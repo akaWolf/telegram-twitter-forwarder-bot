@@ -205,7 +205,7 @@ class FetchAndSendTweetsJob(Job):
 				self.logger.debug('- No tweets available yet on {}'.format(s.tw_user.screen_name))
 
 		# send the new tweets to existing subscribers
-		query = '''SELECT * FROM subscription S
+		query = '''SELECT S.* FROM subscription S
 		INNER JOIN twitteruser TU
 		ON S.tw_user_id = TU.id
 		WHERE S.last_tweet_id <
