@@ -13,6 +13,10 @@ from util import with_touched_chat, escape_markdown, markdown_twitter_usernames
 
 TIMEZONE_LIST_URL = 'https://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
 
+def channel_event(bot, update):
+	bot.logger.warning('getting an event from channel {}, leaving it'.format(update.channel_post.chat.id))
+	bot.leave_chat(update.channel_post.chat.id)
+
 def cmd_ping(bot, update):
 	bot.reply(update, 'Pong!')
 

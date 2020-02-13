@@ -2,7 +2,7 @@ import logging
 
 import tweepy
 from envparse import Env
-from telegram.ext import CommandHandler
+from telegram.ext import CommandHandler, Handler
 from telegram.ext import Updater
 from telegram.ext.messagehandler import MessageHandler
 from telegram.ext.filters import Filters
@@ -41,6 +41,18 @@ def error_callback(bot, update, error):
 		logger.warning('TelegramError')
 
 
+class FilterChannelEvents(Handler):
+	def __init__(self, *args, **kwargs):
+		super(FilterChannelEvents, self).__init__(*args, **kwargs)
+	def check_update(self, update):
+		if update.channel_post is not None:
+			return True
+		else:
+			return False
+	def handle_update(self, update, dispatcher):
+		self.callback(dispatcher.bot, update)
+
+
 if __name__ == '__main__':
 
 	logging.basicConfig(
@@ -77,6 +89,9 @@ if __name__ == '__main__':
 	updater = Updater(bot=TwitterForwarderBot(token, twapi, req_kwargs=request_kwargs))
 	dispatcher = updater.dispatcher
 
+	# set filter for getting all events which are not from PM
+	dispatcher.add_handler(FilterChannelEvents(channel_event))
+
 	# set commands
 	dispatcher.add_handler(CommandHandler('start', cmd_start))
 	dispatcher.add_handler(CommandHandler('help', cmd_help))
@@ -94,6 +109,7 @@ if __name__ == '__main__':
 	dispatcher.add_handler(CommandHandler('set_timezone', cmd_set_timezone, pass_args=True))
 	dispatcher.add_handler(MessageHandler(Filters.text, handle_chat))
 
+	# add error callback
 	dispatcher.add_error_handler(error_callback)
 
 	# put job
